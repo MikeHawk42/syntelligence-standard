@@ -499,6 +499,15 @@ def run_phase(client, log, phase, history, prior_results, session_cfg):
                     {"role": "user", "content": f"[scope redirect from human]: {scope_resp}"}
                 ]
                 move = call_ai(client, system, redir_history)
+                # Re-sync all move-derived state after regeneration
+                dm = move.get("depth_move_classification") or {}
+                dm_class = dm.get("classification")
+                ecc = move.get("exit_condition_check") or {}
+                if move.get("propose_transition") and turn < min_turns:
+                    move["propose_transition"] = None
+                if move.get("propose_transition") and ecc:
+                    if not all(v.get("met") for v in ecc.values() if isinstance(v, dict)):
+                        move["propose_transition"] = None
 
         # Trajectory-level resistance (Failure 3)
         if dm.get("resistance_subtype") == "trajectory_level":
@@ -613,6 +622,13 @@ def run_phase(client, log, phase, history, prior_results, session_cfg):
                 rq = input("  What to investigate? > ").strip()
                 if not rq:
                     print("  (no research query — continuing phase)")
+                    log.write({
+                        "type": "transition_decision",
+                        "phase": phase,
+                        "proposal": proposal,
+                        "decision": "continue",
+                        "research_cancelled": True,
+                    })
                     continue
                 research_history = history + [
                     {"role": "assistant", "content": json.dumps(move)},
@@ -684,7 +700,10 @@ def run_phase(client, log, phase, history, prior_results, session_cfg):
                 }
                 if phase == "STRESS-TEST":
                     result["flaws"] = flaws
-                    if any(f.get("severity") == "FATAL" for f in flaws):
+                    # Only force REFINE re-entry for FATAL flaws that have no mitigation.
+                    # A FATAL with a mitigation was addressed in-session; trust the AI's
+                    # exit condition check ("No FATAL flaws remain unresolved") for those.
+                    if any(f.get("severity") == "FATAL" and not f.get("mitigation") for f in flaws):
                         return ("REFINE", result, history)
                 return (proposal.get("to_phase"), result, history)
             elif decision_lower.startswith("r") and not decision_lower.startswith("res"):
@@ -692,6 +711,8 @@ def run_phase(client, log, phase, history, prior_results, session_cfg):
                 if target in PHASES:
                     history.append({"role": "assistant", "content": json.dumps(move)})
                     return (target, {"phase": phase, "reverted_from": True}, history)
+                else:
+                    print(f"  ('{target}' is not a valid phase — continuing)")
             # else: continue in current phase
 
         # --- Get human depth move ---
@@ -703,16 +724,23 @@ def run_phase(client, log, phase, history, prior_results, session_cfg):
             if human_input.lower() in ("/quit", "/exit"):
                 return (None, {"phase": phase, "user_quit": True}, history)
             if human_input.lower() == "/blind":
-                run_blind_review(client, log, phase, prior_results, move, log.turn_counter)
+                try:
+                    run_blind_review(client, log, phase, prior_results, move, log.turn_counter)
+                except Exception as e:
+                    print(f"  [/blind failed: {e}]")
                 continue
             if human_input.lower().startswith("/inject"):
                 external_feedback = human_input[7:].strip()
                 if not external_feedback:
                     external_feedback = input("  External feedback:\n  > ").strip()
                 if external_feedback:
-                    inj = run_external_injection(
-                        client, log, phase, prior_results, move, external_feedback, log.turn_counter
-                    )
+                    try:
+                        inj = run_external_injection(
+                            client, log, phase, prior_results, move, external_feedback, log.turn_counter
+                        )
+                    except Exception as e:
+                        print(f"  [/inject failed: {e}]")
+                        continue
                     synthesis = inj.get("synthesis", "")
                     revised = inj.get("integration", {}).get("revised_framing", "")
                     injection_content = f"[external review integrated] {synthesis}"
