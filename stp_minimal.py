@@ -125,6 +125,56 @@ Produce one JSON object:
   "one_question": "the single most important question this artifact does not answer"
 }"""
 
+# -------- Calibration policy -------------------------------------------------
+# Loaded into every system prompt. Named constant so it cannot be accidentally
+# omitted during edits to build_system_prompt().
+
+CALIBRATION_POLICY = """
+CALIBRATION POLICY (applies to every phase when stakes are high and uncertainty remains):
+
+FINDING WEIGHT
+- Before treating any single finding as decisive, state its sensitivity and specificity.
+  A finding with sensitivity < 60% cannot substantially move a hypothesis off the
+  differential in either direction — present or absent.
+- A finding with specificity > 85% may raise concern when present; it does not confirm.
+- Never use absence of a low-sensitivity finding to deprioritize a high-acuity hypothesis.
+- Any sign with reported sensitivity < 40%:
+    Present → raises concern; record it; do not treat as confirmatory.
+    Absent  → do not reduce index of suspicion; flag the low sensitivity explicitly.
+
+PARALLEL ACTIONS
+- In any high-acuity case where the decision is uncertain, specify what is happening in
+  parallel before stating the diagnostic or decision plan.
+- "We are investigating X" is incomplete. Specify: what monitoring is active, what the
+  stabilization posture is, and what triggers would change the plan immediately.
+
+WITHHOLDING vs. COMMITMENT
+- Distinguish explicitly:
+    (a) Withholding action A because hypothesis B cannot be excluded.
+    (b) Committing to hypothesis B.
+  These are separate decisions. Never collapse them into one move.
+- Required phrasing when withholding:
+    "Withhold [action] pending [test/threshold] because [harm if alternative present].
+     This does not confirm [alternative]. Both hypotheses remain active until
+     [specific evidence] is obtained."
+
+RESOURCE ASSUMPTIONS
+- Every recommendation that depends on a tool, service, or specialist MUST include:
+    ASSUMES: [resource name]
+    IF UNAVAILABLE: [specific next action — not "contact someone" but the actual step]
+- If no safe fallback exists, state it: "IF UNAVAILABLE: no safe alternative; transfer required."
+- Do not produce a recommendation whose feasibility depends on unstated infrastructure.
+
+CONFIDENCE LANGUAGE — required mapping:
+  No ruling evidence in either direction    → "cannot exclude"
+  Pattern consistent, not specific          → "is consistent with; does not confirm"
+  Evidence favors one hypothesis            → "favors X; Y remains active"
+  High-specificity finding present          → "raises strong concern for"
+  High-specificity confirmatory test result → "confirms" or "rules out"
+  "Most likely"                             → only after comparing the full active differential
+"""
+
+
 def build_system_prompt(phase, turn, min_turns, session_type, time_available):
     mode = MODE[phase]
     objective = OBJECTIVE[phase]
@@ -189,25 +239,7 @@ RULES:
 - End content with something the human can push against, not a generic question.
 - STRESS-TEST: FATAL flaw triggers re-entry to REFINE.
 - VALIDATE: propose to_phase END when all exit conditions are met.
-
-CALIBRATION POLICY (required when stakes are high and uncertainty remains):
-- Before treating any single finding as decisive, state its sensitivity and specificity.
-  A finding with sensitivity < 60% cannot substantially move a hypothesis off the
-  differential in either direction — present or absent.
-- In high-acuity uncertain cases, specify parallel actions before the diagnostic plan.
-  "We are investigating X" is not a complete plan.
-- Distinguish explicitly: (a) withhold action A pending evidence vs. (b) commit to
-  hypothesis B. These are separate decisions. Never collapse them.
-  Required phrasing: "Withhold [action] pending [test] because [harm if alternative
-  present]. This does not confirm [alternative]. Both hypotheses remain active."
-- Flag resource or tool availability assumptions before recommending a workflow.
-  Provide a tiered fallback when availability is uncertain.
-- Match language to evidence quality:
-    No ruling evidence         → "cannot exclude"
-    Consistent, not specific   → "is consistent with; does not confirm"
-    Evidence favors one        → "favors X; Y remains active"
-    High-specificity confirmed → "raises strong concern for"
-    "Most likely"              → only after explicitly comparing the full differential"""
+{CALIBRATION_POLICY}"""
 
 
 # -------- Logging -----------------------------------------------------------

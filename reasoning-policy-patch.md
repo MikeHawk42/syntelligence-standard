@@ -2,7 +2,7 @@
 
 **Applies to:** `stp_minimal.py` and any conformant implementation  
 **Domain:** High-stakes uncertainty reasoning  
-**Status:** Active — incorporated into system prompt calibration block
+**Status:** Active — implemented as `CALIBRATION_POLICY` constant in `stp_minimal.py`, injected into every system prompt via `build_system_prompt()`
 
 ---
 
@@ -67,9 +67,11 @@ WITHHOLDING vs. COMMITMENT
      active until [specific evidence] is obtained."
 
 RESOURCE ASSUMPTIONS
-- Before recommending any diagnostic or therapeutic modality, state whether it is
-  assumed available. If availability is uncertain, provide a tiered plan.
-- Do not recommend a workflow whose feasibility depends on unstated infrastructure.
+- Every recommendation that depends on a tool, service, or specialist MUST include both:
+    ASSUMES: [resource name]
+    IF UNAVAILABLE: [specific next action — not "contact someone" but the actual step]
+- If no safe fallback exists, state it: "IF UNAVAILABLE: no safe alternative; transfer required."
+- Do not produce a recommendation whose feasibility depends on unstated infrastructure.
 
 CONFIDENCE LANGUAGE — required mapping:
   No ruling evidence in either direction    → "cannot exclude"
