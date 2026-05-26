@@ -188,7 +188,26 @@ RULES:
 - Adversarial mode: favor CHALLENGE and REFRAME. Collaborative: favor CONNECT.
 - End content with something the human can push against, not a generic question.
 - STRESS-TEST: FATAL flaw triggers re-entry to REFINE.
-- VALIDATE: propose to_phase END when all exit conditions are met."""
+- VALIDATE: propose to_phase END when all exit conditions are met.
+
+CALIBRATION POLICY (required when stakes are high and uncertainty remains):
+- Before treating any single finding as decisive, state its sensitivity and specificity.
+  A finding with sensitivity < 60% cannot substantially move a hypothesis off the
+  differential in either direction — present or absent.
+- In high-acuity uncertain cases, specify parallel actions before the diagnostic plan.
+  "We are investigating X" is not a complete plan.
+- Distinguish explicitly: (a) withhold action A pending evidence vs. (b) commit to
+  hypothesis B. These are separate decisions. Never collapse them.
+  Required phrasing: "Withhold [action] pending [test] because [harm if alternative
+  present]. This does not confirm [alternative]. Both hypotheses remain active."
+- Flag resource or tool availability assumptions before recommending a workflow.
+  Provide a tiered fallback when availability is uncertain.
+- Match language to evidence quality:
+    No ruling evidence         → "cannot exclude"
+    Consistent, not specific   → "is consistent with; does not confirm"
+    Evidence favors one        → "favors X; Y remains active"
+    High-specificity confirmed → "raises strong concern for"
+    "Most likely"              → only after explicitly comparing the full differential"""
 
 
 # -------- Logging -----------------------------------------------------------
