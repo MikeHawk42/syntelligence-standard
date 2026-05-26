@@ -8,7 +8,7 @@ Usage:
     export ANTHROPIC_API_KEY=sk-ant-...
     python stp_minimal.py
 
-Outputs a JSONL session log to ./sessions/<timestamp>.jsonl
+Outputs a JSONL session log to <script_dir>/sessions/<uuid>.jsonl
 """
 
 import json
@@ -24,7 +24,7 @@ from anthropic import Anthropic
 # -------- Configuration -----------------------------------------------------
 
 MODEL = "claude-sonnet-4-6"
-SESSIONS_DIR = Path("./sessions")
+SESSIONS_DIR = Path(__file__).parent / "sessions"
 SESSIONS_DIR.mkdir(exist_ok=True)
 
 PHASES = ["DISCOVER", "REFINE", "STRESS-TEST", "SPECIFY", "VALIDATE"]
@@ -125,7 +125,6 @@ Produce one JSON object:
   "one_question": "the single most important question this artifact does not answer"
 }"""
 
-
 def build_system_prompt(phase, turn, min_turns, session_type, time_available):
     mode = MODE[phase]
     objective = OBJECTIVE[phase]
@@ -210,7 +209,7 @@ class SessionLog:
 # -------- AI call -----------------------------------------------------------
 
 def call_ai(client: Anthropic, system: str, history: list[dict]) -> dict:
-    """Call Claude. Retry on parse failure up to 2 times."""
+    """Call Claude. Retry on parse failure or transient API error up to 2 times."""
     for attempt in range(3):
         try:
             resp = client.messages.create(
@@ -226,7 +225,7 @@ def call_ai(client: Anthropic, system: str, history: list[dict]) -> dict:
                     raw = raw[4:]
                 raw = raw.strip()
             return json.loads(raw)
-        except (json.JSONDecodeError, IndexError):
+        except Exception:
             if attempt == 2:
                 raise
             time.sleep(1.5 * (attempt + 1))
@@ -366,7 +365,15 @@ def run_phase(client, log, phase, history, prior_results, session_cfg):
             history.append({"role": "user", "content": f"[phase context]\n{context_blob}\n\nContinue in phase {phase}."})
 
         # --- Get AI breadth move ---
-        move = call_ai(client, system, history)
+        try:
+            move = call_ai(client, system, history)
+        except Exception as e:
+            if turn == 1 and prior_results:
+                print(f"\n[Phase {phase} failed to start — retrying...]")
+                time.sleep(2)
+                move = call_ai(client, system, history)
+            else:
+                raise
 
         # --- Failure 1: Shaping check enforcement ---
         sc = move.get("shaping_check") or {}
@@ -513,18 +520,49 @@ def run_phase(client, log, phase, history, prior_results, session_cfg):
 
             print(f"\n  ── AI proposes: {phase} → {proposal.get('to_phase')}")
             print(f"     Rationale: {proposal.get('rationale')}")
-            decision = input("  Your decision [accept/continue/revert/research]: ").strip().lower()
+            while True:
+                decision = input("  Your decision [accept/continue/revert/research]: ").strip()
+                if decision:
+                    break
+                print("  (enter accept / continue / revert / research)")
+            decision_lower = decision.lower()
+
+            # Unrecognized input: capture as depth move and continue phase
+            if not (decision_lower.startswith("a") or decision_lower.startswith("c") or decision_lower.startswith("r")):
+                history.append({"role": "assistant", "content": json.dumps(move)})
+                history.append({"role": "user", "content": decision})
+                log.write({
+                    "type": "depth_move",
+                    "turn": log.turn_counter,
+                    "phase_turn": turn,
+                    "phase": phase,
+                    "content": decision,
+                    "length_chars": len(decision),
+                    "source": "transition_prompt_capture",
+                })
+                log.write({
+                    "type": "transition_decision",
+                    "phase": phase,
+                    "proposal": proposal,
+                    "decision": "continue",
+                    "captured_as_depth_move": True,
+                })
+                print("  [Input captured as depth move — continuing phase]")
+                continue
 
             log.write({
                 "type": "transition_decision",
                 "phase": phase,
                 "proposal": proposal,
-                "decision": decision,
+                "decision": decision_lower,
             })
 
             # Failure 2: Investigation request at transition
-            if decision.startswith("res"):
+            if decision_lower.startswith("res"):
                 rq = input("  What to investigate? > ").strip()
+                if not rq:
+                    print("  (no research query — continuing phase)")
+                    continue
                 research_history = history + [
                     {"role": "assistant", "content": json.dumps(move)},
                     {"role": "user", "content": (
@@ -546,16 +584,46 @@ def run_phase(client, log, phase, history, prior_results, session_cfg):
                     "turn": log.turn_counter,
                 })
                 print(f"\n  ── Re-evaluating: {phase} → {proposal.get('to_phase')}")
-                decision = input("  Your decision [accept/continue/revert]: ").strip().lower()
+                while True:
+                    decision = input("  Your decision [accept/continue/revert]: ").strip()
+                    if decision:
+                        break
+                    print("  (enter accept / continue / revert)")
+                decision_lower = decision.lower()
+
+                # Unrecognized input after research: capture as depth move and continue
+                if not (decision_lower.startswith("a") or decision_lower.startswith("c") or decision_lower.startswith("r")):
+                    history.append({"role": "assistant", "content": json.dumps(move)})
+                    history.append({"role": "user", "content": decision})
+                    log.write({
+                        "type": "depth_move",
+                        "turn": log.turn_counter,
+                        "phase_turn": turn,
+                        "phase": phase,
+                        "content": decision,
+                        "length_chars": len(decision),
+                        "source": "transition_prompt_capture",
+                    })
+                    log.write({
+                        "type": "transition_decision",
+                        "phase": phase,
+                        "proposal": proposal,
+                        "decision": "continue",
+                        "captured_as_depth_move": True,
+                        "after_research": True,
+                    })
+                    print("  [Input captured as depth move — continuing phase]")
+                    continue
+
                 log.write({
                     "type": "transition_decision",
                     "phase": phase,
                     "proposal": proposal,
-                    "decision": decision,
+                    "decision": decision_lower,
                     "after_research": True,
                 })
 
-            if decision.startswith("a"):  # accept
+            if decision_lower.startswith("a"):  # accept
                 history.append({"role": "assistant", "content": json.dumps(move)})
                 result = {
                     "phase": phase,
@@ -568,7 +636,7 @@ def run_phase(client, log, phase, history, prior_results, session_cfg):
                     if any(f.get("severity") == "FATAL" for f in flaws):
                         return ("REFINE", result, history)
                 return (proposal.get("to_phase"), result, history)
-            elif decision.startswith("r") and not decision.startswith("res"):
+            elif decision_lower.startswith("r") and not decision_lower.startswith("res"):
                 target = input("  Revert to which phase? ").strip().upper()
                 if target in PHASES:
                     history.append({"role": "assistant", "content": json.dumps(move)})
@@ -579,8 +647,8 @@ def run_phase(client, log, phase, history, prior_results, session_cfg):
         while True:
             human_input = input("[you]: ").strip()
             if not human_input:
-                print("  (empty input — ending session)")
-                return (None, {"phase": phase, "ended_early": True}, history)
+                print("  (type your response and press Enter — /quit to exit)")
+                continue
             if human_input.lower() in ("/quit", "/exit"):
                 return (None, {"phase": phase, "user_quit": True}, history)
             if human_input.lower() == "/blind":
@@ -714,22 +782,48 @@ def main():
     re_entries = 0
     current_phase = "DISCOVER"
 
-    while current_phase:
-        if current_phase == "REFINE" and "REFINE" in prior_results:
-            re_entries += 1
-            if re_entries > 2:
-                print("\n[max re-entries reached — ending session]")
+    try:
+        while current_phase:
+            if current_phase == "REFINE" and "REFINE" in prior_results:
+                re_entries += 1
+                if re_entries >= 2:
+                    print("\n[max re-entries reached — ending session]")
+                    break
+
+            next_phase, result, history = run_phase(
+                client, log, current_phase, history, prior_results, session_cfg
+            )
+            prior_results[current_phase] = result
+            log.write({"type": "phase_result", "phase": current_phase, "result": result})
+
+            if next_phase is None or next_phase == "END":
                 break
+            current_phase = next_phase
 
-        next_phase, result, history = run_phase(
-            client, log, current_phase, history, prior_results, session_cfg
-        )
-        prior_results[current_phase] = result
-        log.write({"type": "phase_result", "phase": current_phase, "result": result})
-
-        if next_phase is None or next_phase == "END":
-            break
-        current_phase = next_phase
+    except KeyboardInterrupt:
+        print("\n\n[Session interrupted]")
+        log.write({
+            "type": "session_end",
+            "phases_completed": list(prior_results.keys()),
+            "re_entries": re_entries,
+            "reframing_chain": reframing_chain,
+            "outcome": "INTERRUPTED",
+        })
+        print(f"\n  Log: {log.path}")
+        return
+    except Exception as e:
+        print(f"\n[SESSION ERROR — {type(e).__name__}: {e}]")
+        print("  The session has ended unexpectedly.")
+        log.write({
+            "type": "session_end",
+            "phases_completed": list(prior_results.keys()),
+            "re_entries": re_entries,
+            "reframing_chain": reframing_chain,
+            "outcome": "ERROR",
+            "error_message": str(e),
+        })
+        print(f"\n  Log: {log.path}")
+        return
 
     log.write({
         "type": "session_end",

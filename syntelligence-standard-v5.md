@@ -21,7 +21,7 @@ The standard's central claim is stated as a falsifiable proposition. Section 14 
 
 **Interaction protocol is a third layer in the cognitive architecture of AI systems**, alongside model architecture and training. For ambiguous, high-stakes problems, the structure of the interaction between human and AI is a first-class determinant of reasoning quality, with effect sizes hypothesized to be comparable to changing the underlying model. This claim is not yet proven; Section 14 specifies the experiments that would prove or disprove it.
 
-The Syntelligence Standard specifies one candidate instance of this third layer: a protocol that converts ambiguity into validated commitment through a phased sequence of bidirectional turns. Each turn pairs an AI contribution drawing on cross-domain pattern recognition with a human contribution drawing on situated judgment, governed by an explicit shaping constraint that requires each contribution to be demonstrably influenced by the preceding one. Five reasoning phases — Discover, Refine, Stress-Test, Specify, Validate — structure the cognitive work. Three measurable phenomena, collectively called Protocol-Induced Cognition, define what the protocol is designed to produce: Reframing Gain, Assumption Discovery, and Co-generated Insight.
+The Syntelligence Standard specifies one candidate instance of this third layer: a protocol that converts ambiguity into validated commitment through a phased sequence of bidirectional turns. Each turn pairs an AI contribution drawing on cross-domain pattern recognition with a human contribution drawing on situated judgment, governed by an explicit shaping constraint that requires each contribution to be demonstrably influenced by the preceding one. Five reasoning phases (Discover, Refine, Stress-Test, Specify, Validate) structure the cognitive work. Three measurable phenomena, collectively called Protocol-Induced Cognition, define what the protocol is designed to produce: Reframing Gain, Assumption Discovery, and Co-generated Insight.
 
 This document specifies the protocol's mechanism (Sections 4-11), the conditions for its validation and rejection (Sections 14-16), three implementation tiers with conformance criteria (Section 13), a wire format (Section 17), a telemetry schema (Section 18), the Interactive Reasoning Benchmark for empirical comparison (Section 15), and a governance framework for community standardization (Section 22). The protocol is model-agnostic, open-source, and independently implementable. Appendix B provides a one-page implementer's quickstart for Minimal Core conformance.
 
@@ -37,7 +37,7 @@ This standard proposes a different view. For a defined class of problems, the co
 
 This is testable. If the architectural thesis holds, then changing the interaction protocol while holding the model constant should produce reasoning improvements comparable in magnitude to changing the model while holding the protocol constant. Section 14 specifies the experiment.
 
-The standard is one candidate instance of this third layer. Other protocols at the same layer are possible and welcome. The standard's contribution is not "this protocol is the right one." It is "protocols at this layer matter, here is one to test, here is how to test others against it, here is what would prove that none of them matter."
+The standard is one candidate instance of this third layer. Other protocols at the same layer are possible and welcome. The standard's purpose is to establish that protocols at this layer merit serious study, and to give the field something concrete to test and falsify.
 
 ### 1.1 The four foundational claims
 
@@ -47,7 +47,7 @@ The architectural thesis decomposes into four claims, each tied to falsifiable t
 
 **C2. Hybrid cognition is independently evaluable.** The reasoning quality of a human-AI dyad can be measured separately from the quality of either participant in isolation. There exist session outputs attributable to the dyadic interaction and not reducible to either party's contribution. Test: Section 11, inter-rater reliability of Protocol-Induced Cognition detection.
 
-**C3. Some AI failures are interaction failures.** A subset of failures attributed to AI capability limits — sycophancy, premature commitment, missed obvious considerations — are design failures of the surrounding interaction, not capability limits of the model. They can be substantially reduced by interaction design without changing the model. Test: Section 14, experiment E3.
+**C3. Some AI failures are interaction failures.** Certain failures attributed to AI capability limits (sycophancy, premature commitment, missed obvious considerations) are design failures of the surrounding interaction, not capability limits of the model. They can be substantially reduced by interaction design without changing the model. Test: Section 14, experiment E3.
 
 **C4. Protocol design is a frontier.** Engineering interaction structures that reliably produce specific reasoning outcomes is a research and development direction with significance comparable to model scaling, and one the field has substantially under-invested in. C4 follows if C1 through C3 hold and if the improvements are large enough to justify the investment.
 
@@ -96,7 +96,7 @@ The standard's distinctive contribution is sharper than any adjacent method. Wha
 | Expert facilitation | Structured human-only reasoning | Not scalable; not auditable; not implementable as software |
 | Standard AI chat | Frictionless conversation | No phase structure; no shaping enforcement; no measurable output type; no falsifiable claim about quality |
 
-The capability the Syntelligence Standard adds, which none of these provides, is a **bidirectionally shaped reasoning system with auditable provenance and falsifiable measurement of co-generated output**. Each phrase in that definition is load-bearing. Remove "bidirectionally shaped" and you have AI assistance. Remove "auditable provenance" and you have unverified output. Remove "falsifiable measurement" and you have a workflow rather than a standard.
+The capability the Syntelligence Standard adds, which none of these provides, is a **bidirectionally shaped reasoning system with auditable provenance and falsifiable measurement of co-generated output**. Each phrase is load-bearing: bidirectional shaping separates it from AI assistance, auditable provenance from unverifiable output, and falsifiable measurement from a workflow that cannot know whether it works.
 
 ---
 
@@ -137,7 +137,7 @@ CG can be negative. The protocol can produce worse outcomes than unstructured co
 - **Wandering.** The spiral fails to converge. Phase exits are never reached.
 - **Performative resistance.** The human resists for its own sake, not from situated judgment.
 - **False insight.** Output appears novel but traces entirely to one contributor.
-- **Investment bias.** The AI's adversarial evaluation is corrupted by collaborative investment accumulated across the session. Having participated in constructing the problem framing and solution, the AI cannot evaluate the artifact as an independent observer would. Internal stress-testing is effective for identifying logical flaws, missed risks, and design errors. It is structurally limited for detecting scope overreach, unearned assumptions, and presentation failures that are visible only to a reader encountering the artifact cold. Investment bias increases with session length and is invisible on standard spiral metrics; a session exhibiting it looks like normal convergence. See Section 9.6 for the mitigation mechanism.
+- **Investment bias.** The AI's adversarial evaluation is corrupted by collaborative investment accumulated across the session. Having participated in constructing the problem framing and solution, the AI cannot evaluate the artifact as an independent observer would. Internal stress-testing catches logical flaws, missed risks, and design errors that only make sense when the full reasoning chain is known. It cannot catch what is visible only to someone encountering the artifact cold: scope overreach, unearned assumptions, claims that outrun the evidence. Investment bias increases with session length and is invisible on standard spiral metrics; a session exhibiting it looks like normal convergence. See Section 9.6 for the mitigation mechanism.
 
 Each has been observed in pilot sessions. The detection procedures in Section 11 identify them in real time.
 
@@ -255,7 +255,7 @@ Each term below is normative.
 
 ## 8. The phase machine
 
-The five phases of the protocol are not arbitrary procedural stages. They correspond to distinct cognitive states in problem-solving: exploration, diagnosis, synthesis, pre-validation by attack, concrete specification, and empirical planning. The phase sequence enforces an ordering: you cannot specify what you have not refined, cannot refine what you have not diagnosed, cannot diagnose what you have not explored. The most common failure mode of unstructured AI interaction — jumping from a poorly framed problem to a solution mitigating the wrong risks — is what this ordering prevents.
+The five phases correspond to distinct cognitive states: framing and diagnosis, synthesis, adversarial pre-validation, concrete specification, and empirical planning. Their order is not incidental. A specification is only as good as the problem framing it rests on, and a solution only as good as the pressure it has survived. Jumping from a poorly framed problem straight to a solution is the most common failure in unstructured AI interaction; the phase sequence makes that jump structurally impossible.
 
 | Cognitive state | Phase | Mode | Primary move types |
 |---|---|---|---|
@@ -298,7 +298,7 @@ For turn n:
 > 1. The breadth move at turn n contains at least one substantive element that would not be present if the depth move at turn n−1 were removed from the AI's context.
 > 2. The depth move at turn n responds to the breadth move at turn n, not to an earlier turn or to the AI's general behavior.
 
-The AI participant MUST include a `shaped_by` field in each breadth move identifying which element of the preceding depth move influenced the current contribution. This field has three functions: it provides telemetry on whether the spiral is functioning, it gives the human visibility into how their input is being used, and it constrains the AI's generation toward genuine responsiveness rather than generic patterns.
+The AI participant MUST include a `shaped_by` field in each breadth move identifying which element of the preceding depth move influenced the current contribution. This field serves both telemetry and human-facing purposes: it records whether the spiral is functioning, and it makes visible to the human how their input was actually used.
 
 If the shaping constraint is violated for two consecutive turns, the implementation MUST signal a stall and SHOULD propose a recovery action: a phase change, a request for richer depth, or an offer to terminate.
 
@@ -324,9 +324,9 @@ The protocol does not constrain how the human responds. Implementations MUST cla
 - **EXPANSION.** Extends the AI's move into territory the AI did not reach.
 - **DIRECTION.** Redirects the spiral.
 - **RESISTANCE.** Pushes back on the AI's move with substantive conviction.
-- **EXTERNAL_REVIEW_INJECTION.** Routes feedback from a source with no session context — another AI system, a peer reviewer, a domain expert, or any structured cold-read — into the session as a classified event. The AI's response MUST treat this feedback as investment-independent signal: it must not dismiss it as missing context, and it must not accept it uncritically because the external source lacks session history. The AI identifies which criticisms are valid, which miss context that is present in the work, and what the feedback reveals that internal stress-testing missed. See Section 9.6.
+- **EXTERNAL_REVIEW_INJECTION.** Routes feedback from a source with no session context (another AI system, a peer reviewer, a domain expert, or any structured cold-read) into the session as a classified event. The AI's response MUST treat this feedback as investment-independent signal: it must not dismiss it as missing context, and it must not accept it uncritically because the external source lacks session history. The AI distinguishes valid criticisms from those that miss context present in the work, and names what the external feedback reveals that internal stress-testing could not. See Section 9.6.
 
-RESISTANCE is the highest-signal depth move type. The standard's prediction P3 hypothesizes that sessions with more resistance produce better outcomes, controlling for problem difficulty. Implementations MUST NOT treat resistance as failure. The reasoning: resistance signals the AI's breadth has reached a boundary where the human's depth disagrees, and that boundary is where productive cognition occurs.
+RESISTANCE is the highest-signal depth move type. The standard's prediction P3 hypothesizes that sessions with more resistance produce better outcomes, controlling for problem difficulty. Implementations MUST NOT treat resistance as failure. Resistance signals that the AI's breadth has reached a point where the human's depth genuinely disagrees, and that is where productive cognition occurs.
 
 ### 9.5 Confidence levels
 
@@ -342,24 +342,24 @@ A GROUNDED challenge deserves careful response. An INFERRED connection may need 
 
 The STRESS-TEST phase uses adversarial evaluation. But it is conducted by the same AI that participated in producing the output under review. This creates a structural limitation that no amount of adversarial instruction resolves: the AI knows why every decision was made, has context for the reasoning behind each component, and has been shaped by the same turns that produced the output. It is a co-author asked to play devil's advocate.
 
-Two distinct adversarial evaluation types are therefore defined. Both are necessary; neither is a substitute for the other.
+Two distinct adversarial evaluation types are therefore defined. Both are necessary and neither replaces the other.
 
-**Internal adversarial evaluation.** The STRESS-TEST phase. The AI challenges a solution it helped build. Session investment is present. Structurally effective for: identifying logical flaws, contradictions with stated constraints, missed risks, and design errors that are only visible when the full reasoning chain is known. Structurally limited for: detecting scope overreach, unearned assumptions, and failures that are visible to a cold reader precisely because they lack the reasoning context.
+**Internal adversarial evaluation.** The STRESS-TEST phase: the AI challenges a solution it helped build. Because the AI holds full context for every session decision, this works well for identifying logical flaws, missed risks, and design errors that only make sense when the reasoning chain is known. It does not work for detecting scope overreach or unearned claims, which require the perspective of someone encountering the artifact without that context.
 
-**External adversarial evaluation.** Evaluation of the session artifact by a process with no access to session history. No investment. Structurally effective for: detecting scope overreach, claims that outrun what has been earned, and artifacts whose scope or framing a stranger would immediately question. Structurally limited for: evaluating decisions whose rationale requires session context to assess fairly.
+**External adversarial evaluation.** An evaluation of the session artifact by a process with no access to session history. A cold reader can identify scope overreach, claims that outrun the evidence, and gaps that are obvious precisely because they lack context. What a cold reader cannot fairly assess are decisions whose rationale lives in session history.
 
-A protocol with only internal adversarial evaluation will drift toward investment bias over long sessions. External adversarial evaluation is the correction mechanism.
+A protocol relying only on internal adversarial evaluation will drift toward investment bias over long sessions. External adversarial evaluation is the correction.
 
 #### 9.6.1 External injection
 
 When the human introduces feedback from a source with no session context and routes it into the session as an `EXTERNAL_REVIEW_INJECTION` depth move, the implementation MUST process it as follows.
 
-The AI receives the external feedback alongside the current session artifact — the accumulated problem statement, solution form, and flaw inventory — without interpreting the feedback through the lens of why session decisions were made.
+The AI receives the external feedback alongside the current session artifact (the accumulated problem statement, solution form, and flaw inventory) without interpreting the feedback through the lens of why session decisions were made.
 
 The AI's response MUST:
 
 1. Identify which criticisms in the external feedback are valid against the artifact.
-2. Identify which criticisms miss something that IS present in the work — without using this to dismiss the criticism.
+2. Identify which criticisms miss something that IS present in the work, without using this as grounds to dismiss the criticism.
 3. State what the external feedback reveals that internal stress-testing missed.
 4. Produce specific revisions to the current phase output.
 
@@ -369,7 +369,7 @@ The event is logged as an `external_adversarial_review` record (Section 17.6). T
 
 #### 9.6.2 Session-blind evaluation
 
-A session-blind evaluation passes only the current session artifact — with no session history — to an AI evaluation call explicitly instructed to treat the artifact as a stranger's work. The evaluating call assesses: the weakest claim a hostile reviewer would immediately identify, what the artifact assumes without earning, the scope mismatch between what is claimed and what is present, and what is missing that the authors clearly believe is there.
+A session-blind evaluation passes only the current session artifact, with no session history, to an AI evaluation call explicitly instructed to treat the artifact as a stranger's work. The evaluating call assesses: the weakest claim a hostile reviewer would immediately identify, what the artifact assumes without earning, the scope mismatch between what is claimed and what is present, and what is missing that the authors clearly believe is there.
 
 Implementations MUST use a separate AI call without session history for session-blind evaluation. Passing session history defeats the purpose.
 
@@ -387,7 +387,7 @@ The event is logged as an `investment_check_event` record (Section 17.6) regardl
 
 A session exhibiting sustained investment bias produces output that looks like it converges. Phase exit conditions are met. Shaping ratios are normal. Reframing events are logged. The output is wrong in ways internal evaluation cannot see: scope claims the session has not earned, assumptions the session took for granted from the first turn, a solution that sounds like a whitepaper rather than a thing that can be built.
 
-The participants are not lying. The spiral is functioning on observable metrics. This is what makes investment bias distinct from the other failure modes in Section 4.3: it is invisible from inside the session.
+No one is lying. The spiral looks normal on every observable metric. This is what makes investment bias distinct from the other failure modes in Section 4.3: it is invisible from inside the session.
 
 External adversarial review breaks the gradient. The recommended workflow at STRESS-TEST exit: run `/blind` before accepting the transition, or introduce external feedback via `/inject` if available from a genuinely separate source. Synthesize the external evaluation inside the session to produce the revised phase output. The value of the external signal is precisely that it carries no memory of why the session went the way it did.
 
@@ -397,7 +397,7 @@ External adversarial review breaks the gradient. The recommended workflow at STR
 
 Phase transitions follow a propose-confirm pattern. The AI detects exit conditions are met and produces a `TransitionProposal`. The human responds with ACCEPT, CONTINUE, or REVERT.
 
-The human has final authority over transitions. Implementations MUST NOT auto-advance phases without human confirmation. The reasoning: human depth, including the felt sense that something is missing, should govern pace. The AI may detect convergence on observable criteria; the human may know they have not yet articulated what matters.
+The human has final authority over transitions. Implementations MUST NOT auto-advance phases without human confirmation. Human depth, including the felt sense that something is missing, should govern pace; the AI may detect convergence on observable criteria while the human knows they have not yet articulated what matters.
 
 A `TransitionProposal` MUST include the current phase, the proposed next phase, the rationale, the PIC summary, and evidence each exit condition was met. Minimum turn counts MUST be enforced. A transition MUST NOT be proposed before the minimum is reached.
 
@@ -931,7 +931,7 @@ Honest acknowledgment of what is not known is part of what makes a specification
 8. Can resistance be too high? P10 hypothesizes an inverted-U.
 9. Where is the boundary between the protocol and multi-agent debate? Running both sides with AI is not Syntelligence; the boundary needs sharper articulation as adaptive features develop.
 10. Will Adaptive Protocol Tuning work? Depends on P15.
-11. Does investment bias in STRESS-TEST systematically underestimate specific failure categories? If so, should phase exit conditions for STRESS-TEST require at least one session-blind evaluation before accepting the transition — or does this add friction without proportionate benefit?
+11. Does investment bias in STRESS-TEST systematically underestimate specific failure categories? If so, should phase exit conditions for STRESS-TEST require at least one session-blind evaluation before accepting the transition, or does this add friction without proportionate benefit?
 12. Is the session-blind evaluation genuinely investment-free, given that the evaluating AI may have been trained on similar session patterns? The structural separation of the call is necessary but may not be sufficient.
 
 These questions constitute the research agenda. A specification that hides its uncertainties produces brittle adoption. A specification that names them produces durable progress.
@@ -1161,7 +1161,7 @@ Seed input: "I want to grow my consulting business."
 
 **DISCOVER turn 2.** AI: "Then the problem may not be growth but variance. A predictable smaller pipeline beats an unpredictable larger one for cash flow and quality. Is the real problem that you don't know what creates demand spikes?" → Human: "I think it's that referrals are my only channel and they're not steady."
 
-**DISCOVER turn 3.** AI: "The original framing — 'grow the business' — would have led you to invest in capacity or marketing. The actual problem appears to be channel dependency. A solution that diversifies channels matters more than one that increases capacity. Does this capture what you didn't articulate at the start?" → Human: "Yes. I'd never said 'channel dependency' before but that's exactly it."
+**DISCOVER turn 3.** AI: "The original framing ('grow the business') would have led you to invest in capacity or marketing. The actual problem appears to be channel dependency. A solution that diversifies channels matters more than one that increases capacity. Does this capture what you didn't articulate at the start?" → Human: "Yes. I'd never said 'channel dependency' before but that's exactly it."
 
 → AI proposes transition to REFINE. Human accepts.
 
@@ -1217,4 +1217,4 @@ This appendix is included for transparency. Readers evaluating the standard shou
 
 ---
 
-*The standard exists to be built on, tested, and broken. Submissions are welcomed through the SEP process and the open issues tracker. Success is measured by whether the underlying claim — that interaction protocol is a layer in the cognitive architecture of AI systems — turns out to be true.*
+*The standard exists to be built on, tested, and broken. Submissions are welcomed through the SEP process and the open issues tracker. Success is measured by whether the underlying claim turns out to be true: that interaction protocol is a layer in the cognitive architecture of AI systems.*
