@@ -6,6 +6,14 @@
 
 ---
 
+**Pre-commitment declaration**
+
+I, Josiah Tan, commit to the analysis plan in this document on 26 May 2026. The success thresholds in the section "Pre-committed analysis" are locked from this date. I will not edit them after recruiting begins. I will not exclude sessions post-hoc except on the grounds specified in "Exclusion criteria." I will publish the pilot result — positive, null, or negative — before beginning any v6 work. The analysis will be performed by an independent reader whose classification I commit to accepting.
+
+Signed: Josiah Tan, 26 May 2026
+
+---
+
 ## Why pre-commit before running
 
 The pilot's purpose is to find out whether the protocol does anything useful. The standard failure mode of small studies is post-hoc interpretation: "session 3 went badly because the user wasn't engaged, session 7 doesn't count because the problem was wrong for the protocol, session 9 was a hit." This is how projects survive evidence that should have killed them.
